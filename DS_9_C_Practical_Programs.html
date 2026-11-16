@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPPU Data Structures – 9 C Practical Programs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── Design tokens ── */
+  :root {
+    --ink: #0f172a;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --paper: #ffffff;
+    --bg: #f1f5f9;
+    --accent: #4f46e5;
+    --accent-dark: #3730a3;
+    --accent-light: #eef2ff;
+    --green: #10b981;
+    --header-from: #0f172a;
+    --header-to: #1e3a5f;
+    --shadow-card: 0 1px 3px rgba(15,23,42,.06), 0 4px 16px rgba(15,23,42,.08);
+    --radius-card: 16px;
+    --radius-btn: 10px;
+  }
+
+  /* ── Reset ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+  /* ── Body ── */
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.6 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: linear-gradient(135deg, var(--header-from) 0%, var(--header-to) 100%);
+    color: white;
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,.35);
+  }
+  .header-inner {
+    max-width: 1140px;
+    margin: auto;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .header-brand { display: flex; align-items: center; gap: 14px; }
+  .header-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    border-radius: 12px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(99,102,241,.4);
+  }
+  .header-icon svg { width: 24px; height: 24px; }
+  .header-titles h1 {
+    font-size: clamp(18px, 3vw, 26px);
+    font-weight: 700;
+    letter-spacing: -.3px;
+    line-height: 1.2;
+  }
+  .header-titles p { color: #94a3b8; font-size: 13px; margin-top: 3px; }
+  .header-badge {
+    background: rgba(99,102,241,.2);
+    color: #a5b4fc;
+    border: 1px solid rgba(99,102,241,.35);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .4px;
+    white-space: nowrap;
+  }
+
+  /* ── Layout ── */
+  main { max-width: 1140px; margin: auto; padding: 28px 20px 60px; }
+
+  /* ── Notice ── */
+  .notice {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    border-left: 4px solid #f59e0b;
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: #78350f;
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+  .notice-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── Search ── */
+  .search-wrap {
+    position: relative;
+    margin-bottom: 20px;
+  }
+  .search-icon {
+    position: absolute;
+    left: 16px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+  }
+  #search {
+    width: 100%;
+    padding: 14px 16px 14px 46px;
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    font: 15px/1 inherit;
+    background: var(--paper);
+    color: var(--ink);
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+  }
+  #search:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(79,70,229,.12);
+  }
+  #search::placeholder { color: #94a3b8; }
+
+  /* ── Jump nav ── */
+  .jump-label { font-size: 11px; font-weight: 600; letter-spacing: .6px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+  .jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+  .jump a {
+    color: var(--accent);
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 20px;
+    padding: 6px 14px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background .15s, border-color .15s, color .15s, transform .12s, box-shadow .15s;
+  }
+  .jump a:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79,70,229,.25);
+  }
+
+  /* ── Program card ── */
+  .program {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    margin: 0 0 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    transition: box-shadow .2s, transform .2s;
+  }
+  .program:hover {
+    box-shadow: 0 4px 24px rgba(15,23,42,.12);
+    transform: translateY(-1px);
+  }
+
+  /* ── Program header ── */
+  .program-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    padding: 16px 20px;
+    background: linear-gradient(to right, #f8fafc, #f1f5f9);
+    border-bottom: 1px solid var(--line);
+  }
+  .program-title { display: flex; align-items: center; gap: 12px; }
+  .prog-num {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), #818cf8);
+    color: white;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(79,70,229,.3);
+  }
+  h2 { font-size: 16px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+
+  /* ── Toolbar bar above code ── */
+  .code-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: #0d1424;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+  }
+  .code-lang {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .8px;
+    color: #64748b;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .code-lang::before {
+    content: '';
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #22d3ee;
+  }
+
+  /* ── Copy button ── */
+  .copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(79,70,229,.15);
+    color: #a5b4fc;
+    border: 1px solid rgba(79,70,229,.3);
+    border-radius: var(--radius-btn);
+    padding: 7px 14px;
+    font: 600 13px/1 inherit;
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s, transform .1s;
+    white-space: nowrap;
+  }
+  .copy:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    transform: scale(1.03);
+  }
+  .copy.copied {
+    background: rgba(16,185,129,.15);
+    color: #6ee7b7;
+    border-color: rgba(16,185,129,.3);
+  }
+  .copy:focus { outline: 3px solid rgba(79,70,229,.35); outline-offset: 2px; }
+
+  /* ── Code block ── */
+  pre {
+    margin: 0;
+    padding: 20px;
+    overflow: auto;
+    background: #0d1117;
+    color: #e6edf3;
+    font: 13px/1.65 'Fira Code', 'Cascadia Code', Consolas, Monaco, monospace;
+    tab-size: 4;
+    max-height: 480px;
+  }
+  code { white-space: pre; }
+
+  /* Scrollbar */
+  pre::-webkit-scrollbar { width: 6px; height: 6px; }
+  pre::-webkit-scrollbar-track { background: #0d1117; }
+  pre::-webkit-scrollbar-thumb { background: #2d3748; border-radius: 3px; }
+  pre::-webkit-scrollbar-thumb:hover { background: #4a5568; }
+
+  /* ── Footer ── */
+  footer {
+    color: var(--muted);
+    text-align: center;
+    padding: 10px 0 32px;
+    font-size: 13px;
+  }
+
+  /* ── Hidden ── */
+  .hidden { display: none !important; }
+
+  /* ── Corner FAB ── */
+  .corner-link {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff;
+    text-decoration: none;
+    padding: 13px 20px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 6px 24px rgba(79,70,229,.45), 0 2px 8px rgba(0,0,0,.2);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 999;
+    transition: transform .2s, box-shadow .2s;
+    letter-spacing: .2px;
+  }
+  .corner-link:hover {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 10px 32px rgba(79,70,229,.55), 0 4px 12px rgba(0,0,0,.2);
+  }
+  .corner-link:active { transform: translateY(0) scale(.98); }
+  .corner-link svg { flex-shrink: 0; }
+
+  /* ── No results ── */
+  #no-results {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--muted);
+    font-size: 15px;
+    display: none;
+  }
+  #no-results svg { opacity: .35; display: block; margin: 0 auto 12px; }
+
+  /* ── Responsive ── */
+  @media(max-width:640px) {
+    .program-head { flex-direction: column; align-items: flex-start; }
+    .copy { width: 100%; justify-content: center; }
+    header { position: static; }
+    .header-badge { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="header-icon">
+        <svg fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      </div>
+      <div class="header-titles">
+        <h1>Data Structures Using C</h1>
+        <p>SPPU Practical Programs &nbsp;·&nbsp; 9 Programs &nbsp;·&nbsp; One Page</p>
+      </div>
+    </div>
+    <div class="header-badge">9 PROGRAMS</div>
+  </div>
+</header>
+<main>
+<div class="notice">
+  <span class="notice-icon">⚠️</span>
+  <div><strong>Reminder:</strong> Use prepared files during your practical only if your examiner/college permits them. Compile and test each program before relying on it.</div>
+</div>
+<div class="search-wrap">
+  <span class="search-icon">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  </span>
+  <input id="search" type="search" placeholder="Search a program (e.g. queue, hashing, BST, stack)…" oninput="filterPrograms()" aria-label="Search programs">
+</div>
+<p class="jump-label">Jump to program</p>
+<nav class="jump" aria-label="Jump to program">
+  <a href="#program-1">1 · Linear & Binary Search</a>
+  <a href="#program-2">2 · Bubble & Selection Sort</a>
+  <a href="#program-3">3 · Hashing</a>
+  <a href="#program-4">4 · Singly Linked List</a>
+  <a href="#program-5">5 · Doubly Linked List</a>
+  <a href="#program-6">6 · Stack (Infix→Postfix)</a>
+  <a href="#program-7">7 · Linear Queue</a>
+  <a href="#program-8">8 · BST</a>
+  <a href="#program-9">9 · Graph &amp; DFS</a>
+</nav>
+<div id="no-results">
+  <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  No programs match your search.
+</div>
+
+    <section class="program" id="program-1" data-title="program 1 – linear search and binary search">
+      <div class="program-head">
+        <div class="program-title">
+          <div class="prog-num">1</div>
+          <h2>Linear Search &amp; Binary Search</h2>
+        </div>
+        <button class="copy" type="button" onclick="copyCode('code-1', this)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy code
+        </button>
+      </div>
+      <div class="code-toolbar"><span class="code-lang">C Language</span></div>
+      <pre><code id="code-1">#include&lt;stdio.h&gt;
+
+int linearSearch(int arr[], int n, int key){
+    for(int i=0; i&lt;n; i++)
+        if(arr[i]==key)
+            return i;
+    return -1;
+}
+
+int binarySearch(int arr[], int n, int key){
+    int low=0, high=n-1, mid;
+    while(low&lt;=high){
+        mid=(low+high)/2;
+        if(arr[mid]==key)
+            return mid;
+        else if(arr[mid]&lt;key) low=mid+1;
+        else high=mid-1;
+    }
+    return -1;
+}
+
+int main(){
+    int n, key, choice, i;
+    printf(&quot;Enter number of students: &quot;);
+    scanf(&quot;%d&quot;,&amp;n);
+    int arr[n];
+    printf(&quot;Enter roll numbers: &quot;);
+    for(i=0; i&lt;n; i++)
+        scanf(&quot;%d&quot;,&amp;arr[i]);
+
+    printf(&quot;\\n1. Linear Search &quot;);
+    printf(&quot;\\n2. Binary Search &quot;);
+    printf(&quot;\\n3. Exit&quot;);
+    printf(&quot;\\nEnter your choice: &quot;);
+    scanf(&quot;%d&quot;,&amp;choice);
+    printf(&quot;Enter roll number to be searched: &quot;);
+    scanf(&quot;%d&quot;,&amp;key);
+
+    switch(choice){
+        case 1:
+            i = linearSearch(arr,n,key);
+            if(i==-1)
+                printf(&quot;Student did not attend the training.&quot;);
+            else
+                printf(&quot;Student attended the training.&quot;);
+            break;
+        case 2:
+            for(int j=0; j&lt;n-1; j++)
+                for(int k=0; k&lt;n-j-1; k++)
+                    if(arr[k]&gt;arr[k+1]){
+                        int t=arr[k];
+                        arr[k]=arr[k+1];
+                        arr[k+1]=t;
+                    }
+            i = binarySearch(arr,n,key);
+            if(i==-1)
+                printf(&quot;Student did not attend the training.&quot;);
+            else
+                printf(&quot;Student attended the training.&quot;);
+            break;
+        case 3: return 0;
+        default: printf(&quot;Invalid Choice&quot;);
+    }
+    return 0;
+}</code></pre>
+    </section>
+
+    <section class="program" id="program-2" data-title="program 2 – bubble sort and selection sort">
+      <div class="program-head">
+        <div class="program-title">
+          <div class="prog-num">2</div>
+          <h2>Bubble Sort &amp; Selection Sort</h2>
+        </div>
+        <button class="copy" type="button" onclick="copyCode('code-2', this)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy code
+        </button>
+      </div>
+      <div class="code-toolbar"><span class="code-lang">C Language</span></div>
+      <pre><code id="code-2">#include&lt;stdio.h&gt;
+
+void bubbleSort(float arr[], int n){
+    int i, j;
+    float temp;
+    int swapped;
+    for(i = 0; i &lt; n-1; i++){
+        swapped = 0;
+        for(j = 0; j &lt; n-i-1; j++){
+            if(arr[j] &gt; arr[j+1]){
+                temp = arr[j];
+                arr[j] = arr[j+1];
+                arr[j+1] = temp;
+                swapped = 1;
+            }
+        }
+        if(swapped == 0)
+            break;
+    }
+}
+
+void selectionSort(float arr[], int n){
+    int i, j, minIndex;
+    float temp;
+    for(i = 0; i &lt; n-1; i++){
+        minIndex = i;
+        for(j = i+1; j &lt; n; j++){
+            if(arr[j] &lt; arr[minIndex])
+                minIndex = j;
+        }
+        temp = arr[i];
+        arr[i] = arr[minIndex];
+        arr[minIndex] = temp;
+    }
+}
+
+void display(float arr[], int n){
+    for(int i = 0; i &lt; n; i++)
+        printf(&quot;%.2f &quot;, arr[i]);
+    printf(&quot;\\n&quot;);
+}
+
+void topFive(float arr[], int n){
+    printf(&quot;Top 5 Scores: &quot;);
+    int count = (n &lt; 5)? n : 5;
+    for(int i = n-1; i &gt;= n-count; i--)
+        printf(&quot;%.2f &quot;, arr[i]);
+    printf(&quot;\\n&quot;);
+}
+
+int main(){
+    int n, choice, i;
+    printf(&quot;Enter number of students: &quot;);
+    scanf(&quot;%d&quot;, &amp;n);
+    float arr[n], copy[n];
+    printf(&quot;Enter percentage of %d students: &quot;, n);
+    for(i = 0; i &lt; n; i++){
+        scanf(&quot;%f&quot;, &amp;arr[i]);
+        copy[i] = arr[i];
+    }
+
+    printf(&quot;\\n1. Bubble Sort&quot;);
+    printf(&quot;\\n2. Selection Sort&quot;);
+    printf(&quot;\\nEnter your choice: &quot;);
+    scanf(&quot;%d&quot;, &amp;choice);
+
+    switch(choice){
+        case 1:
+            bubbleSort(arr, n);
+            printf(&quot;\\nSorted array using Bubble Sort: &quot;);
+            display(arr, n);
+            topFive(arr, n);
+            break;
+        case 2:
+            selectionSort(copy, n);
+            printf(&quot;\\nSorted array using Selection Sort: &quot;);
+            display(copy, n);
+            topFive(copy, n);
+            break;
+        default:
+            printf(&quot;Invalid Choice&quot;);
+    }
+    return 0;
+}</code></pre>
+    </section>
+
+    <section class="program" id="program-3" data-title="program 3 – hashing techniques">
+      <div class="program-head">
+        <div class="program-title">
+          <div class="prog-num">3</div>
+          <h2>Hashing Techniques</h2>
+        </div>
+        <button class="copy" type="button" onclick="copyCode('code-3', this)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy code
+        </button>
+      </div>
+      <div class="code-toolbar"><span class="code-lang">C Language</span></div>
+      <pre><code id="code-3">#include &lt;stdio.h&gt;
+
+int hashtable[10];
+
+void linear_insert(int key){
+    int index;
+    index = key % 10;
+    while(hashtable[index]!= -1){
+        index = (index + 1) % 10;
+    }
+    hashtable[index] = key;
+}
+
+void quadratic_insert(int key){
+    int index;
+    int i = 0;
+    while(i &lt;= 10){
+        index = key % 10;
+        index = (index + (i * i)) % 10;
+        if(hashtable[index] == -1){
+            hashtable[index] = key;
+            break;
+        } else {
+            i++;
+        }
+    }
+}
+
+void double_insert(int key){
+    int index;
+    int i = 0;
+    int h1 = key % 10;
+    int h2 = 7 - (key % 7);
+    while(i &lt;= 10){
+        index = key % 10;
+        index = (h1 + (i * h2)) % 10;
+        if(hashtable[index] == -1){
+            hashtable[index] = key;
+            break;
+        } else {
+            i++;
+        }
+    }
+}
+
+void display(){
+    for(int i = 0; i &lt; 10; i++){
+        printf(&quot;\\n%d\\t%d&quot;, i, hashtable[i]);
+    }
+}
+
+void search(int key){
+    int found = 0;
+    for(int i = 0; i &lt; 10; i++){
+        if(hashtable[i] == key){
+            printf(&quot;\\nKey found at index %d&quot;, i);
+            found = 1;
+            break;
+        }
+    }
+    if(found == 0){
+        printf(&quot;\\nKey not found&quot;);
+    }
+}
+
+int main(){
+    int choice, key;
+    for(int i = 0; i &lt; 10; i++){
+        hashtable[i] = -1;
+    }
+    do{
+        printf(&quot;\\n\\n--- MENU ---&quot;);
+        printf(&quot;\\n1. Linear Probing Insert&quot;);
+        printf(&quot;\\n2. Quadratic Probing Insert&quot;);
+        printf(&quot;\\n3. Double Hashing Insert&quot;);
+        printf(&quot;\\n4. Display&quot;);
+        printf(&quot;\\n5. Search&quot;);
+        printf(&quot;\\n6. Exit&quot;);
+        printf(&quot;\\nEnter your choice: &quot;);
+        scanf(&quot;%d&quot;, &amp;choice);
+
+        switch(choice){
+            case 1:
+                printf(&quot;\\nEnter the value: &quot;);
+                for(int i = 0; i &lt; 6; i++){
+                    scanf(&quot;%d&quot;, &amp;key);
+                    linear_insert(key);
+                }
+                break;
+            case 2:
+                printf(&quot;\\nEnter the value: &quot;);
+                for(int i = 0; i &lt; 6; i++){
+                    scanf(&quot;%d&quot;, &amp;key);
+                    quadratic_insert(key);
+                }
+                break;
+            case 3:
+                printf(&quot;\\nEnter the value: &quot;);
+                for(int i = 0; i &lt; 6; i++){
+                    scanf(&quot;%d&quot;, &amp;key);
+                    double_insert(key);
+                }
+                break;
+            case 4:
+                display();
+                break;
+            case 5:
+                printf(&quot;\\nEnter the value to search: &quot;);
+                scanf(&quot;%d&quot;, &amp;key);
+                search(key);
+                break;
+            case 6:
+                printf(&quot;\\nExiting...&quot;);
+                break;
+            default:
+                printf(&quot;\\nInvalid choice&quot;);
+        }
+    } while(choice!= 6);
+    return 0;
+}</code></pre>
+    </section>
+
+    <section class="program" id="program-4" data-title="program 4 – pinnacle club using singly linked list">
+      <div class="program-head">
+        <div class="program-title">
+          <div class="prog-num">4</div>
+          <h2>Pinnacle Club – Singly Linked List</h2>
+        </div>
+        <button class="copy" type="button" onclick="copyCode('code-4', this)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy code
+        </button>
+      </div>
+      <div class="code-toolbar"><span class="code-lang">C Language</span></div>
+      <pre><code id="code-4">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+struct node{
+    int PRN;
+    char name[40];
+    struct node *next;
+};
+
+struct node *head = NULL;
+
+void add_president(){
+    struct node *newnode;
+    newnode = (struct node*)malloc(sizeof(struct node));
+    printf(&quot;Enter PRN of President: &quot;);
+    scanf(&quot;%d&quot;, &amp;newnode-&gt;PRN);
+    printf(&quot;Enter name of President: &quot;);
+    scanf(&quot;%s&quot;, newnode-&gt;name);
+    newnode-&gt;next = head;
+    head = newnode;
+    printf(&quot;President added successfully\\n&quot;);
+}
+
+void add_secretory(){
+    struct node *newnode, *temp;
+    newnode = (struct node*)malloc(sizeof(struct node));
+    printf(&quot;Enter PRN of Secretary: &quot;);
+    scanf(&quot;%d&quot;, &amp;newnode-&gt;PRN);
+    printf(&quot;Enter name of Secretary: &quot;);
+    scanf(&quot;%s&quot;, newnode-&gt;name);
+    newnode-&gt;next = NULL;
+    if(head == NULL){
+        head = newnode;
+    } else {
+        temp = head;
+        while(temp-&gt;next!= NULL){
+            temp = temp-&gt;next;
+        }
+        temp-&gt;next = newnode;
+    }
+    printf(&quot;Secretary added successfully\\n&quot;);
+}
+
+void add_members(){
+    struct node *newnode, *temp;
+    newnode = (struct node*)malloc(sizeof(struct node));
+    printf(&quot;Enter PRN of Member: &quot;);
+    scanf(&quot;%d&quot;, &amp;newnode-&gt;PRN);
+    printf(&quot;Enter name of Member: &quot;);
+    scanf(&quot;%s&quot;, newnode-&gt;name);
+    if(head == NULL){
+        printf(&quot;Add President first!\\n&quot;);
+        free(newnode);
+        return;
+    }
+    temp = head;
+    newnode-&gt;next = temp-&gt;next;
+    temp-&gt;next = newnode;
+    printf(&quot;Member added successfully\\n&quot;);
+}
+
+void delete_president(){
+    struct node *temp;
+    if(head == NULL){
+        printf(&quot;List is empty\\n&quot;);
+        return;
+    }
+    temp = head;
+    head = head-&gt;next;
+    free(temp);
+    printf(&quot;President deleted\\n&quot;);
+}
+
+void delete_secretory(){
+    struct node *temp, *prev;
+    if(head == NULL){
+        printf(&quot;List is empty\\n&quot;);
+        return;
+    }
+    if(head-&gt;next == NULL){
+        free(head);
+        head = NULL;
+        printf(&quot;Secretary deleted\\n&quot;);
+        return;
+    }
+    temp = head;
+    while(temp-&gt;next!= NULL){
+        prev = temp;
+        temp = temp-&gt;next;
+    }
+    prev-&gt;next = NULL;
+    free(temp);
+    printf(&quot;Secretary deleted\\n&quot;);
+}
+
+void delete_members(){
+    struct node *temp, *prev;
+    if(head == NULL){
+        printf(&quot;List is empty\\n&quot;);
+        return;
+    }
+    if(head-&gt;next == NULL){
+        printf(&quot;No members to delete\\n&quot;);
+        return;
+    }
+    if(head-&gt;next-&gt;next == NULL){
+        printf(&quot;Only President and Secretary present, no members\\n&quot;);
+        return;
+    }
+    prev = head;
+    temp = head-&gt;next;
+    prev-&gt;next = temp-&gt;next;
+    free(temp);
+    printf(&quot;Member deleted\\n&quot;);
+}
+
+void display(){
+    struct node *temp = head;
+    if(head == NULL){
+        printf(&quot;List is empty\\n&quot;);
+        return;
+    }
+    printf(&quot;\\n--- Pinnacle Club List ---\\n&quot;);
+    while(temp!= NULL){
+        printf(&quot;%d | %s -&gt; &quot;, temp-&gt;PRN, temp-&gt;name);
+        temp = temp-&gt;next;
+    }
+    printf(&quot;NULL\\n&quot;);
+}
+
+void count(){
+    struct node *temp = head;
+    int cnt = 0;
+    while(temp!= NULL){
+        cnt++;
+        temp = temp-&gt;next;
+    }
+    printf(&quot;Total members in club: %d\\n&quot;, cnt);
+}
+
+int main(){
+    int ch;
+    printf(&quot;Welcome to Pinnacle Club\\n&quot;);
+    do{
+        printf(&quot;\\n 1.Add President \\n 2.Add Secretary \\n 3.Add Members \\n 4.Delete President \\n 5.Delete Secretary \\n 6.Delete Members \\n 7.Display \\n 8.Total count \\n 9.Exit \\n&quot;);
+        printf(&quot;\\n Enter your choice: &quot;);
+        scanf(&quot;%d&quot;, &amp;ch);
+        switch(ch){
+            case 1:
+                add_president();
+                display();
+                break;
+            case 2:
+                add_secretory();
+                display();
+                break;
+            case 3:
+                add_members();
+                display();
+                break;
+            case 4:
+                delete_president();
+                display();
+                break;
+            case 5:
+                delete_secretory();
+                display();
+                break;
+            case 6:
+                delete_members();
+                display();
+                break;
+            case 7:
+                display();
+                break;
+            case 8:
+                count();
+                break;
+            case 9:
+                printf(&quot;Exiting...\\n&quot;);
+                break;
+            default:
+                printf(&quot;Invalid choice\\n&quot;);
+        }
+    } while(ch!= 9);
+    return 0;
+}</code></pre>
+    </section>
+
+    <section class="program" id="program-5" data-title="program 5 – cinema ticket booking using doubly linked list">
+      <div class="program-head">
+        <div class="program-title">
+          <div class="prog-num">5</div>
+          <h2>Cinema Ticket Booking – Doubly Linked List</h2>
+        </div>
+        <button class="copy" type="button" onclick="copyCode('code-5', this)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy code
+        </button>
+      </div>
+      <div class="code-toolbar"><span class="code-lang">C Language</span></div>
+      <pre><code id="code-5">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+struct node {
+    int seat_no;
+    struct node *prev;
+    struct node *next;
+};
+
+struct node *head[10] = {NULL};
+
+void create() {
+    for (int row = 0; row &lt; 10; row++) {
+        if (head[row] != NULL) continue;
+        struct node *temp = NULL;
+        for (int i = 1; i &lt;= 7; i++) {
+            struct node *newnode = (struct node*)malloc(sizeof(struct node));
+            newnode-&gt;seat_no = i;
+            newnode-&gt;prev = NULL;
+            newnode-&gt;next = NULL;
+            if (head[row] == NULL) {
+                head[row] = newnode;
+                temp = newnode;
+            } else {
+                temp-&gt;next = newnode;
+                newnode-&gt;prev = temp;
+                temp = newnode;
+            }
+        }
+    }
+}
+
+void book() {
+    int row, s;
+    printf(&quot;\\nEnter row (1-10): &quot;);
+    scanf(&quot;%d&quot;, &amp;row);
+    printf(&quot;Enter seat_no to be booked (1-7): &quot;);
+    scanf(&quot;%d&quot;, &amp;s);
+    if (row &lt; 1 || row &gt; 10) {
+        printf(&quot;Invalid row!\\n&quot;);
+        return;
+    }
+    struct node *temp = head[row-1];
+    while (temp != NULL &amp;&amp; temp-&gt;seat_no != s) {
+        temp = temp-&gt;next;
+    }
+    if (temp == NULL) {
+        printf(&quot;Seat %d in row %d is already booked!\\n&quot;, s, row);
+        return;
+    }
+    if (temp == head[row-1]) {
+        head[row-1] = temp-&gt;next;
+        if (head[row-1] != NULL) {
+            head[row-1]-&gt;prev = NULL;
+        }
+    } else if (temp-&gt;next == NULL) {
+        temp-&gt;prev-&gt;next = NULL;
+    } else {
+        temp-&gt;prev-&gt;next = temp-&gt;next;
+        temp-&gt;next-&gt;prev = temp-&gt;prev;
+    }
+    free(temp);
+    printf(&quot;Seat %d in row %d booked successfully!\\n&quot;, s, row);
+}
+
+void cancel() {
+    int row, s;
+    printf(&quot;\\nEnter row (1-10) to cancel: &quot;);
+    scanf(&quot;%d&quot;, &amp;row);
+    printf(&quot;Enter seat_no to cancel (1-7): &quot;);
+    scanf(&quot;%d&quot;, &amp;s);
+    if (row &lt; 1 || row &gt; 10 || s &lt; 1 || s &gt; 7) {
+        printf(&quot;Invalid input!\\n&quot;);
+        return;
+    }
+    struct node *check = head[row-1];
+    while (check != NULL) {
+        if (check-&gt;seat_no == s) {
+            printf(&quot;Seat already available!\\n&quot;);
+            return;
+        }
+        check = check-&gt;next;
+    }
+    struct node *newnode = (struct node*)malloc(sizeof(struct node));
+    newnode-&gt;seat_no = s;
+    newnode-&gt;prev = NULL;
+    newnode-&gt;next = NULL;
+
+    if (head[row-1] == NULL || s &lt; head[row-1]-&gt;seat_no) {
+        newnode-&gt;next = head[row-1];
+        if (head[row-1] != NULL) {
+            head[row-1]-&gt;prev = newnode;
+        }
+        head[row-1] = newnode;
+    } else {
+        struct node *temp = head[row-1];
+        while (temp-&gt;next != NULL &amp;&amp; temp-&gt;next-&gt;seat_no &lt; s) {
+            temp = temp-&gt;next;
+        }
+        newnode-&gt;next = temp-&gt;next;
+        newnode-&gt;prev = temp;
+        if (temp-&gt;next != NULL) {
+            temp-&gt;next-&gt;prev = newnode;
+        }
+        temp-&gt;next = newnode;
+    }
+    printf(&quot;Booking for seat %d in row %d cancelled!\\n&quot;, s, row);
+}
+
+void display() {
+    printf(&quot;\\n--- Available Seats ---\\n&quot;);
+    for (int row = 0; row &lt; 10; row++) {
+        printf(&quot;Row %2d: &quot;, row + 1);
+        struct node *temp = head[row];
+        if (temp == NULL) {
+            printf(&quot;All seats booked&quot;);
+        }
+        while (temp != NULL) {
+            printf(&quot;%d &lt;-&gt; &quot;, temp-&gt;seat_no);
+            temp = temp-&gt;next;
+        }
+        printf(&quot;NULL\\n&quot;);
+    }
+}
+
+int main() {
+    int ch;
+    create();
+    do {
+        printf(&quot;\\n--- MENU ---\\n&quot;);
+        printf(&quot;1. Display available seats\\n&quot;);
+        printf(&quot;2. Book a seat\\n&quot;);
+        printf(&quot;3. Cancel booking\\n&quot;);
+        printf(&quot;4. Exit\\n&quot;);
+        printf(&quot;Enter choice: &quot;);
+        scanf(&quot;%d&quot;, &amp;ch);
+        switch (ch) {
+            case 1:
+                display();
+                break;
+            case 2:
+                book();
+                display();
+                break;
+            case 3:
+                cancel();
+                display();
+                break;
+            case 4:
+                printf(&quot;Exiting...\\n&quot;);
+                break;
+            default:
+                printf(&quot;Invalid choice!\\n&quot;);
+        }
+    } while (ch != 4);
+    return 0;
+}</code></pre>
+    </section>
+
+    <section class="program" id="program-6" data-title="program 6 – infix to postfix conversion using stack">
+      <div class="program-head">
+        <div class="program-title">
+          <div class="prog-num">6</div>
+          <h2>Infix to Postfix – Stack</h2>
+        </div>
+        <button class="copy" type="button" onclick="copyCode('code-6', this)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy code
+        </button>
+      </div>
+      <div class="code-toolbar"><span class="code-lang">C Language</span></div>
+      <pre><code id="code-6">#include &lt;stdio.h&gt;
+#include &lt;ctype.h&gt;
+#define MAX 50
+
+char stack[MAX];
+int top = -1;
+
+int isfull() {
+    return top == MAX - 1;
+}
+
+int isempty() {
+    return top == -1;
+}
+
+void push(char x) {
+    if (isfull()) {
+        printf(&quot;Stack is full\\n&quot;);
+    } else {
+        stack[++top] = x;
+    }
+}
+
+char pop() {
+    if (isempty()) {
+        printf(&quot;Stack is empty\\n&quot;);
+        return &#x27;\\0&#x27;;
+    } else {
+        return stack[top--];
+    }
+}
+
+char peek() {
+    if (isempty()) return &#x27;\\0&#x27;;
+    return stack[top];
+}
+
+int priority(char ch) {
+    if (ch == &#x27;+&#x27; || ch == &#x27;-&#x27;)
+        return 1;
+    if (ch == &#x27;*&#x27; || ch == &#x27;/&#x27; || ch == &#x27;%&#x27;)
+        return 2;
+    if (ch == &#x27;^&#x27;)
+        return 3;
+    return 0;
+}
+
+void convert(char infix[], char postfix[]) {
+    int i = 0, j = 0;
+    char ch;
+    while ((ch = infix[i++]) != &#x27;\\0&#x27;) {
+        if (isalnum(ch)) {
+            postfix[j++] = ch;
+        }
+        else if (ch == &#x27;(&#x27;) {
+            push(ch);
+        }
+        else if (ch == &#x27;)&#x27;) {
+            while (!isempty() &amp;&amp; peek() != &#x27;(&#x27;) {
+                postfix[j++] = pop();
+            }
+            if (!isempty() &amp;&amp; peek() == &#x27;(&#x27;) {
+                pop();
+            }
+        }
+        else {
+            while (!isempty() &amp;&amp; priority(peek()) &gt;= priority(ch) &amp;&amp; peek() != &#x27;(&#x27;) {
+                if (ch == &#x27;^&#x27; &amp;&amp; priority(peek()) == priority(ch)) break;
+                postfix[j++] = pop();
+            }
+            push(ch);
+        }
+    }
+    while (!isempty()) {
+        postfix[j++] = pop();
+    }
+    postfix[j] = &#x27;\\0&#x27;;
+}
+
+int main() {
+    char infix[MAX], postfix[MAX];
+    printf(&quot;Enter infix expression: &quot;);
+    scanf(&quot;%s&quot;, infix);
+    convert(infix, postfix);
+    printf(&quot;Infix: %s\\n&quot;, infix);
+    printf(&quot;Postfix: %s\\n&quot;, postfix);
+    return 0;
+}</code></pre>
+    </section>
+
+    <section class="program" id="program-7" data-title="program 7 – pizza parlour using linear queue">
+      <div class="program-head">
+        <div class="program-title">
+          <div class="prog-num">7</div>
+          <h2>Pizza Parlour – Linear Queue</h2>
+        </div>
+        <button class="copy" type="button" onclick="copyCode('code-7', this)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy code
+        </button>
+      </div>
+      <div class="code-toolbar"><span class="code-lang">C Language</span></div>
+      <pre><code id="code-7">#include &lt;stdio.h&gt;
+#define SIZE 10
+
+int queue[SIZE];
+int front = -1;
+int rear = -1;
+
+int isFull() {
+    if (rear == SIZE - 1)
+        return 1;
+    else
+        return 0;
+}
+
+int isEmpty() {
+    if (front == -1)
+        return 1;
+    else
+        return 0;
+}
+
+void order() {
+    int pizza;
+    if (isFull()) {
+        printf(&quot;Pizza parlour is full! Cannot take more orders.\\n&quot;);
+        return;
+    }
+    printf(&quot;Enter the pizza order number: &quot;);
+    scanf(&quot;%d&quot;, &amp;pizza);
+    if (isEmpty()) {
+        front = 0;
+    }
+    rear++;
+    queue[rear] = pizza;
+    printf(&quot;Order %d placed successfully!\\n&quot;, pizza);
+}
+
+void serveOrder() {
+    if (isEmpty()) {
+        printf(&quot;Pizza parlour is empty! No orders to serve.\\n&quot;);
+        return;
+    }
+    printf(&quot;Order %d is served.\\n&quot;, queue[front]);
+    if (front == rear) {
+        front = rear = -1;
+    } else {
+        front++;
+    }
+}
+
+void display() {
+    if (isEmpty()) {
+        printf(&quot;No orders available.\\n&quot;);
+        return;
+    }
+    printf(&quot;Orders: Front -&gt; &quot;);
+    for (int i = front; i &lt;= rear; i++) {
+        printf(&quot;%d &quot;, queue[i]);
+    }
+    printf(&quot;&lt;- Rear\\n&quot;);
+}
+
+int main() {
+    int choice;
+    while (1) {
+        printf(&quot;\\n~~~~ Pizza Parlour ~~~~\\n&quot;);
+        printf(&quot;1. Order pizza\\n&quot;);
+        printf(&quot;2. Serve order\\n&quot;);
+        printf(&quot;3. Display orders\\n&quot;);
+        printf(&quot;4. Exit\\n&quot;);
+        printf(&quot;Enter your choice: &quot;);
+        scanf(&quot;%d&quot;, &amp;choice);
+        switch (choice) {
+            case 1:
+                order();
+                break;
+            case 2:
+                serveOrder();
+                break;
+            case 3:
+                display();
+                break;
+            case 4:
+                printf(&quot;\\nThank you!\\n&quot;);
+                return 0;
+            default:
+                printf(&quot;\\nInvalid choice!\\n&quot;);
+        }
+    }
+}</code></pre>
+    </section>
+
+    <section class="program" id="program-8" data-title="program 8 – binary search tree">
+      <div class="program-head">
+        <div class="program-title">
+          <div class="prog-num">8</div>
+          <h2>Binary Search Tree (BST)</h2>
+        </div>
+        <button class="copy" type="button" onclick="copyCode('code-8', this)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy code
+        </button>
+      </div>
+      <div class="code-toolbar"><span class="code-lang">C Language</span></div>
+      <pre><code id="code-8">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+struct node {
+    int data;
+    struct node *left;
+    struct node *right;
+};
+
+struct node *createnode(int value) {
+    struct node *newnode = (struct node*)malloc(sizeof(struct node));
+    newnode-&gt;data = value;
+    newnode-&gt;left = NULL;
+    newnode-&gt;right = NULL;
+    return newnode;
+}
+
+struct node *insert(struct node *root, int value) {
+    if (root == NULL) {
+        return createnode(value);
+    }
+    if (value &lt; root-&gt;data) {
+        root-&gt;left = insert(root-&gt;left, value);
+    } else if (value &gt; root-&gt;data) {
+        root-&gt;right = insert(root-&gt;right, value);
+    }
+    return root;
+}
+
+void inorder(struct node *root) {
+    if (root != NULL) {
+        inorder(root-&gt;left);
+        printf(&quot;%d  &quot;, root-&gt;data);
+        inorder(root-&gt;right);
+    }
+}
+
+int height(struct node *root) {
+    if (root == NULL) return 0;
+    int hleft = height(root-&gt;left);
+    int hright = height(root-&gt;right);
+    return (hleft &gt; hright ? hleft : hright) + 1;
+}
+
+int min(struct node *root) {
+    if (root == NULL) {
+        printf(&quot;Tree is empty\\n&quot;);
+        return -1;
+    }
+    struct node *temp = root;
+    while (temp-&gt;left != NULL) {
+        temp = temp-&gt;left;
+    }
+    return temp-&gt;data;
+}
+
+int search(struct node *root, int key) {
+    if (root == NULL) {
+        return 0;
+    }
+    if (key == root-&gt;data) {
+        return 1;
+    }
+    if (key &lt; root-&gt;data) {
+        return search(root-&gt;left, key);
+    } else {
+        return search(root-&gt;right, key);
+    }
+}
+
+void mirror(struct node *root) {
+    if (root != NULL) {
+        struct node *temp = root-&gt;left;
+        root-&gt;left = root-&gt;right;
+        root-&gt;right = temp;
+        mirror(root-&gt;left);
+        mirror(root-&gt;right);
+    }
+}
+
+int main() {
+    struct node *root = NULL;
+    root = insert(root, 50);
+    insert(root, 30);
+    insert(root, 60);
+    insert(root, 10);
+    insert(root, 35);
+    insert(root, 70);
+    insert(root, 15);
+    insert(root, 85);
+    insert(root, 40);
+
+    printf(&quot;Inorder sequence of Tree is :\\n&quot;);
+    inorder(root);
+
+    int ch, key, value;
+    do {
+        printf(&quot;\\n\\n1. Insert a new node\\n2. Find height\\n3. Find minimum\\n4. Mirror a tree\\n5. Search a value\\n6. EXIT \\nEnter choice : &quot;);
+        scanf(&quot;%d&quot;, &amp;ch);
+        switch (ch) {
+            case 1:
+                printf(&quot;Enter value to insert: &quot;);
+                scanf(&quot;%d&quot;, &amp;value);
+                root = insert(root, value);
+                inorder(root);
+                break;
+            case 2:
+                printf(&quot;\\nHeight of tree is : %d&quot;, height(root));
+                break;
+            case 3:
+                printf(&quot;\\nMinimum data in tree is : %d&quot;, min(root));
+                break;
+            case 4:
+                printf(&quot;Mirror of tree (Inorder):\\n&quot;);
+                mirror(root);
+                inorder(root);
+                mirror(root);
+                break;
+            case 5:
+                printf(&quot;Enter the value of key : &quot;);
+                scanf(&quot;%d&quot;, &amp;key);
+                if (search(root, key))
+                    printf(&quot;Element %d found!\\n&quot;, key);
+                else
+                    printf(&quot;Element %d NOT found!\\n&quot;, key);
+                break;
+            case 6:
+                exit(0);
+            default:
+                printf(&quot;Invalid choice\\n&quot;);
+        }
+    } while (ch != 6);
+    return 0;
+}</code></pre>
+    </section>
+
+    <section class="program" id="program-9" data-title="program 9 – flight graph using adjacency matrix, list and dfs">
+      <div class="program-head">
+        <div class="program-title">
+          <div class="prog-num">9</div>
+          <h2>Flight Graph – Adjacency Matrix, List &amp; DFS</h2>
+        </div>
+        <button class="copy" type="button" onclick="copyCode('code-9', this)">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy code
+        </button>
+      </div>
+      <div class="code-toolbar"><span class="code-lang">C Language</span></div>
+      <pre><code id="code-9">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#define MAX 20
+
+int adj[MAX][MAX];
+int visited[MAX];
+int n;
+char cityName[MAX][30];
+
+void createGraph();
+void addEdge();
+void displayGraph();
+void DFS(int v);
+int isConnected();
+void resetVisited();
+
+void createGraph() {
+    printf(&quot;\\nEnter number of cities (max %d): &quot;, MAX);
+    scanf(&quot;%d&quot;, &amp;n);
+
+    for(int i=0; i&lt;n; i++) {
+        printf(&quot;Enter name of city %d: &quot;, i+1);
+        scanf(&quot;%s&quot;, cityName[i]);
+    }
+
+    for(int i=0; i&lt;n; i++) {
+        for(int j=0; j&lt;n; j++) {
+            adj[i][j] = 0;
+        }
+    }
+
+    int edges;
+    printf(&quot;\\nEnter number of flight paths: &quot;);
+    scanf(&quot;%d&quot;, &amp;edges);
+    printf(&quot;Enter flight paths (Source Destination Cost):\\n&quot;);
+    printf(&quot;Use city numbers 0 to %d\\n&quot;, n-1);
+    for(int k=0; k&lt;edges; k++) {
+        int src, dest, cost;
+        printf(&quot;Flight %d: &quot;, k+1);
+        scanf(&quot;%d %d %d&quot;, &amp;src, &amp;dest, &amp;cost);
+        if(src &gt;=0 &amp;&amp; src &lt; n &amp;&amp; dest &gt;=0 &amp;&amp; dest &lt; n) {
+            adj[src][dest] = cost;
+            adj[dest][src] = cost;
+        } else {
+            printf(&quot;Invalid city number!\\n&quot;);
+            k--;
+        }
+    }
+    printf(&quot;\\nGraph Created Successfully!\\n&quot;);
+}
+
+void addEdge() {
+    int src, dest, cost;
+    printf(&quot;\\nEnter new flight (Source Destination Cost/Time/Fuel): &quot;);
+    scanf(&quot;%d %d %d&quot;, &amp;src, &amp;dest, &amp;cost);
+    if(src &gt;=0 &amp;&amp; src &lt; n &amp;&amp; dest &gt;=0 &amp;&amp; dest &lt; n) {
+        adj[src][dest] = cost;
+        adj[dest][src] = cost;
+        printf(&quot;Flight added between %s and %s with cost %d\\n&quot;, cityName[src], cityName[dest], cost);
+    } else {
+        printf(&quot;Invalid cities!\\n&quot;);
+    }
+}
+
+void displayGraph() {
+    printf(&quot;\\n--- Adjacency Matrix (Cost = Time/Fuel) ---\\n&quot;);
+    printf(&quot;\\t&quot;);
+    for(int i=0; i&lt;n; i++) printf(&quot;%s\\t&quot;, cityName[i]);
+    printf(&quot;\\n&quot;);
+
+    for(int i=0; i&lt;n; i++) {
+        printf(&quot;%s\\t&quot;, cityName[i]);
+        for(int j=0; j&lt;n; j++) {
+            printf(&quot;%d\\t&quot;, adj[i][j]);
+        }
+        printf(&quot;\\n&quot;);
+    }
+
+    printf(&quot;\\n--- Adjacency List ---\\n&quot;);
+    for(int i=0; i&lt;n; i++) {
+        printf(&quot;%s -&gt; &quot;, cityName[i]);
+        for(int j=0; j&lt;n; j++) {
+            if(adj[i][j] != 0) {
+                printf(&quot;%s(%d) -&gt; &quot;, cityName[j], adj[i][j]);
+            }
+        }
+        printf(&quot;NULL\\n&quot;);
+    }
+}
+
+void DFS(int v) {
+    visited[v] = 1;
+    for(int i=0; i&lt;n; i++) {
+        if(adj[v][i] != 0 &amp;&amp; !visited[i]) {
+            DFS(i);
+        }
+    }
+}
+
+void resetVisited() {
+    for(int i=0; i&lt;n; i++) visited[i] = 0;
+}
+
+int isConnected() {
+    resetVisited();
+    DFS(0);
+    for(int i=0; i&lt;n; i++) {
+        if(!visited[i]) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int main() {
+    int ch;
+    createGraph();
+
+    while(1) {
+        printf(&quot;\\n\\n~~~~ FLIGHT GRAPH MENU ~~~~\\n&quot;);
+        printf(&quot;1. Display Graph (Matrix &amp; List)\\n&quot;);
+        printf(&quot;2. Add New Flight Path\\n&quot;);
+        printf(&quot;3. Check if Graph is Connected\\n&quot;);
+        printf(&quot;4. Exit\\n&quot;);
+        printf(&quot;Enter your choice: &quot;);
+        scanf(&quot;%d&quot;, &amp;ch);
+
+        switch(ch) {
+            case 1:
+                displayGraph();
+                break;
+            case 2:
+                addEdge();
+                break;
+            case 3:
+                if(isConnected()) {
+                    printf(&quot;\\n*** Graph is CONNECTED - You can travel between all cities ***\\n&quot;);
+                } else {
+                    printf(&quot;\\n*** Graph is NOT CONNECTED - Some cities are isolated ***\\n&quot;);
+                    printf(&quot;Unreachable cities from %s: &quot;, cityName[0]);
+                    for(int i=0; i&lt;n; i++) {
+                        if(!visited[i]) printf(&quot;%s &quot;, cityName[i]);
+                    }
+                    printf(&quot;\\n&quot;);
+                }
+                break;
+            case 4:
+                printf(&quot;Exiting...\\n&quot;);
+                exit(0);
+            default:
+                printf(&quot;Invalid choice!\\n&quot;);
+        }
+    }
+    return 0;
+}</code></pre>
+    </section>
+<footer>Keep a backup copy of this file on your PC &nbsp;·&nbsp; Works offline in any modern browser</footer>
+</main>
+<script>
+async function copyCode(id, button) {
+  const text = document.getElementById(id).innerText;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (e) {
+    const range = document.createRange();
+    range.selectNodeContents(document.getElementById(id));
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+  const svgHTML = button.querySelector('svg').outerHTML;
+  button.innerHTML = svgHTML + ' Copied!';
+  button.classList.add('copied');
+  setTimeout(() => {
+    button.innerHTML = svgHTML + ' Copy code';
+    button.classList.remove('copied');
+  }, 1600);
+}
+
+function filterPrograms() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  let visible = 0;
+  document.querySelectorAll('.program').forEach(section => {
+    const matches = !q || section.innerText.toLowerCase().includes(q);
+    section.classList.toggle('hidden', !matches);
+    if (matches) visible++;
+  });
+  document.getElementById('no-results').style.display = (q && visible === 0) ? 'block' : 'none';
+}
+</script>
+
+<a class="corner-link" href="https://aniket-ds.vercel.app" target="_blank" rel="noopener" title="Visit Aniket DS">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+  Aniket DS
+</a>
+</body>
+</html>
